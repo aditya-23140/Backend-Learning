@@ -3,7 +3,16 @@ const http = require("http"); //http is by default installed in node js so no ne
 //Creating server
 const server = http.createServer((req, res) => {
   console.log(req.url); //url tell which route we are hitting like localhos:3000/about will return /about;
-  res.end("Hello, world!"); //for any request we get on server our response will be "Hello, world!"
+
+  if (req.url === "/about") {
+    res.end("About Page");
+  }
+  if (req.url === "/profile") {
+    res.end("Profile Page");
+  }
+  if (req.url === "/") {
+    res.end("Home Page");
+  }
 });
 
 //running the server
