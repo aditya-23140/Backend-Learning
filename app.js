@@ -3,6 +3,8 @@ const morgan = require("morgan");
 const app = express();
 
 app.use(morgan("dev"));
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
 
 app.set("view engine", "ejs");
 
@@ -20,6 +22,11 @@ app.get(
 
 app.get("/about", (req, res) => {
   res.send("About Page");
+});
+
+app.post("/get-form-data", (req, res) => {
+  console.log(req.body);
+  res.send("Data Recieved");
 });
 
 app.listen(3000, () => {

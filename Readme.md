@@ -115,6 +115,27 @@ const morgan = require("morgan");
 app.use(morgan("dev")); //output: GET / 304 17.858 ms - -
 ```
 
+9. <u>Form Control</u>: To get data from a form we need to create a route and it should pe put in `action` value in `form` tag. We use `POST` method to avoid showing data in url.
+   <br> `POST` used to bring data from frontend to backend.
+   <br> `GET` used to bring data from backend to frontend.
+   <br> By default express cannot read POST data so use express.json() and express.urlendcoded() middleware to read the POST data.
+
+```js
+//.get and .post will be changed with respect to the kind of request server is expecting to recieve.
+app.get("/get-form-data", (req, res) => {
+  console.log(req.query); //This output is recieved: [Object: null prototype] {} because we didn't named the data.
+  res.send("Data Recieved");
+});
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.post("/get-form-data", (req, res) => {
+  console.log(req.body);
+  res.send("Data Recieved");
+});
+```
+
 <br>
 <br>
 <br>
