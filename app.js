@@ -1,22 +1,15 @@
-const http = require("http"); //http is by default installed in node js so no need to install this pakage
+const express = require("express");
+const app = express();
 
-//Creating server
-const server = http.createServer((req, res) => {
-  console.log(req.url); //url tell which route we are hitting like localhos:3000/about will return /about;
-
-  if (req.url === "/about") {
-    res.end("About Page");
-  }
-  if (req.url === "/profile") {
-    res.end("Profile Page");
-  }
-  if (req.url === "/") {
-    res.end("Home Page");
-  }
+app.get("/", (req, res) => {
+  res.send("Hello, world");
 });
 
-//running the server
-const PORT = 3000;
-server.listen(PORT, () => {
-  console.log(`Server listening at: http://localhost:${PORT}/`);
+app.get("/about", (req, res) => {
+  res.send("About Page");
+});
+
+app.listen(3000, () => {
+  console.log("Port listening at 3000");
+  console.log("visit http://localhost:3000/");
 });

@@ -40,6 +40,40 @@ const server = http.createServer((req, res) => {
 });
 ```
 
+5. <u>Setting up express</u>:
+  <br>Express is like a toolbox and calling `express()` opens it. It is used to create servers..
+```
+npm i express
+```
+
+```js
+const express = require("express");
+const app = express();
+```
+
+6. <u>Routing in Express</u>: `.get` is used for all get request on a route and `.post` for POST requests.
+
+```js
+app.get("/", (req, res) => {
+  res.send("Hello, world");
+});
+```
+
+
+
+
+
+
+
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
 package.json file tells us about all the (ingredients) basic details about all the pkg used in our project and it is for developers. If we only have package.json then we can regenerate node_modules and pakage-lock.json by using:
 
 > npm i
