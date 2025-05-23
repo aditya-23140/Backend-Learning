@@ -137,7 +137,74 @@ app.post("/get-form-data", (req, res) => {
 ```
 
 10. <u>Handeling CSS</u>: Create a css file in public directory and use `express.static("[foldername]")` middleware and link the css with the ejs file normally.
-We can load any static file using this.
+    We can load any static file using this.
+
+## Database (MongoDB)
+
+1. <u>Setup: </u>
+
+```
+npm i mongoose
+```
+
+Create a config directory to connect to database.
+
+```js
+//db.js
+const mongoose = require("mongoose");
+
+//connecting to local database
+const connection = mongoose
+  .connect("mongodb://localhost:27017/backend-tutorial")
+  .then(() => {
+    console.log("connected to database");
+  });
+
+module.exports = connection;
+```
+
+<br>Create a directory named modles which is used to store schema of database.
+
+```js
+//user schema user.js file
+const mongoose = require("mongoose");
+
+const userSchema = new mongoose.Schema({
+  username: String,
+  /* Not using currently
+  age: Number,
+  gender: {
+    type: String,
+    enum: ["male", "female"],
+  },
+  */
+  email: String,
+  password: String,
+});
+
+const userModel = mongoose.model("user", userSchema);
+
+module.exports = userModel;
+
+//app.js
+const connection = require("./config/db");
+const userModel = require("./models/user");
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <br>
 <br>
