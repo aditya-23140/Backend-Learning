@@ -79,38 +79,41 @@ app.get("/", (req, res) => {
   res.render("index");
 });
 ```
+
 8. <u>Middleware</u>: This allows to redirect to another site when accessing restricted pages.
+
 ```js
 //Middleware, it is run at every route
-app.use((res, req, next)=>{
+app.use((req, res, next) => {
   console.log("Middleware");
-  return next() //allows for normal flow.
-})
+  return next(); //allows for normal flow.
+});
+
+//When using middleware for only one route:
+app.get(
+  "/",
+  (req, res, next) => {
+    const a = 5;
+    console.log(a);
+    next(); // Passes control to main function
+  },
+  (req, res) => {
+    res.render("index");
+  }
+);
 ```
 
+8. <u>Adding morgan package:</u> morgan is a middleware logger. Tells all detail about all the request recived at server. Format:
+   > [type of request] [route] [response code] [time]
 
+```
+npm i morgan
+```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+```js
+const morgan = require("morgan");
+app.use(morgan("dev")); //output: GET / 304 17.858 ms - -
+```
 
 <br>
 <br>

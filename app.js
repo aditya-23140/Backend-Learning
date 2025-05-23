@@ -1,17 +1,22 @@
 const express = require("express");
+const morgan = require("morgan");
 const app = express();
+
+app.use(morgan("dev"));
 
 app.set("view engine", "ejs");
 
-//Middleware, it is run at every route
-app.use((res, req, next)=>{
-  console.log("Middleware");
-  return next() //allows for normal flow.
-})
-
-app.get("/", (req, res) => {
-  res.render("index");
-});
+app.get(
+  "/",
+  (req, res, next) => {
+    const a = 5;
+    console.log(a);
+    next();
+  },
+  (req, res) => {
+    res.render("index");
+  }
+);
 
 app.get("/about", (req, res) => {
   res.send("About Page");
