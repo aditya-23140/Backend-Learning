@@ -41,7 +41,8 @@ const server = http.createServer((req, res) => {
 ```
 
 5. <u>Setting up express</u>:
-  <br>Express is like a toolbox and calling `express()` opens it. It is used to create servers..
+   <br>Express is like a toolbox and calling `express()` opens it. It is used to create servers..
+
 ```
 npm i express
 ```
@@ -58,6 +59,51 @@ app.get("/", (req, res) => {
   res.send("Hello, world");
 });
 ```
+
+7. <u>Rendering HTML with express</u>: using EJS
+
+```
+npm i ejs
+```
+
+Setting up does not require to import it just use :
+
+```js
+app.set("view engine", "ejs");
+```
+
+To use ejs we need to create a views directory and inside it need to create `index.ejs`. Syntax for index.ejs is similar to normal HTML. And to render it we use (`.render("[filename]")`):
+
+```js
+app.get("/", (req, res) => {
+  res.render("index");
+});
+```
+8. <u>Middleware</u>: This allows to redirect to another site when accessing restricted pages.
+```js
+//Middleware, it is run at every route
+app.use((res, req, next)=>{
+  console.log("Middleware");
+  return next() //allows for normal flow.
+})
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
