@@ -136,6 +136,9 @@ app.post("/get-form-data", (req, res) => {
 });
 ```
 
+10. <u>Handeling CSS</u>: Create a css file in public directory and use `express.static("[foldername]")` middleware and link the css with the ejs file normally.
+We can load any static file using this.
+
 <br>
 <br>
 <br>
