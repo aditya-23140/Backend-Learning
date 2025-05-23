@@ -27,6 +27,22 @@ app.get("/about", (req, res) => {
   res.send("About Page");
 });
 
+app.get("/register", (req, res) => {
+  res.render("register");
+});
+app.post("/register", async (req, res) => {
+  const { username, email, password } = req.body;
+
+  const newUser = await userModel.create({
+    username: username,
+    email: email,
+    password: password,
+  });
+
+  //will not be sent till user is created
+  res.send(newUser);
+});
+
 app.post("/get-form-data", (req, res) => {
   console.log(req.body);
   res.send("Data Recieved");

@@ -191,9 +191,25 @@ const connection = require("./config/db");
 const userModel = require("./models/user");
 ```
 
+2. <u>Creating a user:</u> Create a file name `register.ejs` in views directory and set action to `/register` and method to `post`.
 
+```js
+app.get("/register", (req, res) => {
+  res.render("register");
+});
+app.post("/register", async (req, res) => {
+  const { username, email, password } = req.body;
 
+  const newUser = await userModel.create({
+    username: username,
+    email: email,
+    password: password,
+  });
 
+  //will not be sent till user is created
+  res.send(newUser);
+});
+```
 
 
 
