@@ -43,6 +43,30 @@ app.post("/register", async (req, res) => {
   res.send(newUser);
 });
 
+app.get("/get-data", (req, res) => {
+  userModel.find({ username: "Gilgamesh" }).then((users) => {
+    res.send(users);
+  });
+});
+
+app.get("/update-user", async (req, res) => {
+  await userModel.findOneAndUpdate(
+    { username: "a" }, //find condition
+    {
+      email: "c@gmail.com", //update query
+    }
+  );
+  res.send("User Updated");
+});
+
+app.get("/delete-user", async (req, res) => {
+  await userModel.findOneAndDelete({
+    username: "a",
+  });
+
+  res.send("User Deleted");
+});
+
 app.post("/get-form-data", (req, res) => {
   console.log(req.body);
   res.send("Data Recieved");

@@ -211,25 +211,39 @@ app.post("/register", async (req, res) => {
 });
 ```
 
+3. <u>CRUD Operations:</u>
 
+```js
+//Basically we can execute all the mongodb cmds on database while executing on "userModel"
+//Read
+app.get("/get-data", (req, res) => {
+  userModel.find({ username: "Gilgamesh" }).then((users) => {
+    res.send(users); //find returns empty array when nothing is found while findOne returns null
+  });
+});
 
+//Update
+app.get("/update-user", async (req, res) => {
+  await userModel.findOneAndUpdate(
+    { username: "a" }, //find condition
+    {
+      email: "c@gmail.com", //update query
+    }
+  );
+  res.send("User Updated");
+});
 
+//Delete
+app.get("/delete-user", async (req, res) => {
+  await userModel.findOneAndDelete({
+    username: "a",
+  });
 
+  res.send("User Deleted");
+});
+```
 
-
-
-
-
-
-
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
+## Others
 package.json file tells us about all the (ingredients) basic details about all the pkg used in our project and it is for developers. If we only have package.json then we can regenerate node_modules and pakage-lock.json by using:
 
 > npm i
