@@ -259,3 +259,30 @@ res.cookie("token", token); //.cookie(name, value)
 
 res.send("Logged In");
 ```
+
+7. <u>Creating home page</u>:
+
+```js
+//index.routes.js
+const express = require("express");
+const router = express.Router();
+
+router.get("/home", (req, res) => {
+  res.render("home");
+});
+
+module.exports = router;
+```
+
+```js
+//app.js
+const indexRouter = require("./routes/index.routes");
+
+app.use("/", indexRouter); //home will be rendered at just /home route.
+```
+
+```js
+//home.ejs
+//When creating form for files need to add enctype
+<form action="/upload-file" method="post" enctype="multipart/form-data"></form>
+```
