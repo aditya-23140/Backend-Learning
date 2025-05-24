@@ -516,3 +516,97 @@ router.post(
   }
 );
 ```
+
+11. <u>Fetchin user uploaded files:</u> For private buckets we need to create signedURLs to access files
+
+```js
+const DURATION = 24 * 60 * 60;
+
+router.get("/home", authMiddleware, async (req, res) => {
+  try {
+    const userFiles = await fileModel.find({ uploadedBy: req.user.userId });
+
+    //Generating signed urls
+    const signedFiles = await Promise.all(
+      userFiles.map(async (file) => {
+        const { data, error } = await supabase.storage
+          .from("project-drive") //replace with your bucket name
+          .createSignedUrl(file.supabasePath, DURATION); //valid for 24hrs
+
+        if (error) {
+          console.error(`Error signing URL for ${file.supabasePath}`, error);
+          return { ...file.toObject(), signedUrl: null };
+        }
+
+        return { ...file.toObject(), signedUrl: data.signedUrl };
+      })
+    );
+
+    console.log(signedFiles);
+
+    res.render("home", { files: signedFiles });
+  } catch (err) {
+    console.error("Failed to fetch files:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+```
+
+12. <u>Adding download feature in homepage</u>:
+
+```html
+<!-- Home.ejs -->
+<div class="files flex flex-col gap-2 mt-8">
+  <% files.forEach((file)=> { %>
+  <div
+    class="p-2 rounded-md bg-gray-300 cursor-pointer mt-2 flex justify-between items-center"
+  >
+    <h1 class="w-fit"><%= file.filename %></h1>
+
+    <a
+      href="/download/<%= encodeURIComponent(file.supabasePath) %>"
+      download="<%= file.filename %>"
+      target="_blank"
+      ><i class="ri-download-line"></i
+    ></a>
+  </div>
+  <%}); %>
+</div>
+```
+
+```js
+//index.router.js
+router.get("/download/:path", authMiddleware, async (req, res) => {
+  try {
+    const loggedUserId = req.user.userId;
+    const path = decodeURIComponent(req.params.path);
+
+    const file = await fileModel.findOne({
+      uploadedBy: loggedUserId,
+      supabasePath: path,
+    });
+
+    if (!file) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
+    const { data, error } = await supabase.storage
+      .from("project-drive") //replace with your bucket name
+      .createSignedUrl(path, 60); //valid for 60 seconds
+
+    if (error || !data) {
+      console.error(error);
+      return res.status(500).json({ message: "Failed to generate signed URL" });
+    }
+
+    const signedUrl = data.signedUrl;
+
+    res.redirect(signedUrl);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+```

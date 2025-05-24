@@ -46,6 +46,20 @@
         <i class="ri-close-large-line"></i>
       </button>
     </div>
+
+    <div class="files flex flex-col gap-2 mt-8">
+      <% files.forEach((file)=> { %>
+        <div class="p-2 rounded-md bg-gray-300 cursor-pointer mt-2 flex justify-between items-center">
+          <h1 class="w-fit">
+            <%= file.filename %>
+          </h1>
+
+          <a href="/download/<%= encodeURIComponent(file.supabasePath) %>" download="<%= file.filename %>"
+            target="_blank"><i class="ri-download-line"></i></a>
+        </div>
+        <%}); %>
+    </div>
+
   </main>
   <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
   <script>
