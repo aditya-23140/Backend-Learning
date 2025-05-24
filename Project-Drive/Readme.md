@@ -386,7 +386,8 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       .getPublicUrl(supabasePath);
 
     res.json({
-      path: data.path,
+      filename: file.originalname,
+      supabasePath: data.path,
       publicUrl: publicUrlData.publicUrl,
     });
   } catch (err) {
@@ -394,4 +395,124 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     res.status(500).send("Server error");
   }
 });
+```
+
+9. <u>File schema</u>:
+
+```js
+const mongoose = require("mongoose");
+
+const fileSchema = new mongoose.Schema({
+  filename: {
+    type: String,
+    required: [true, "Path is required"],
+  },
+  supabasePath: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  publicUrl: {
+    type: String,
+    required: true,
+  },
+  uploadedBy: {
+    type: mongoose.Schema.Types.ObjectId, // optional, if you have users collection
+    ref: "users", //database for user collection
+    required: [true, "User is required"],
+  },
+  uploadedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+const file = mongoose.model("file", fileSchema);
+
+module.exports = file;
+```
+
+10. <u>Adding AUTH and uploading file details to mongodb</u>:
+
+> Create middlewares directory and create auth.js file
+
+```js
+//auth.js
+const jwt = require("jsonwebtoken");
+
+function auth(req, res, next) {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).json({
+      message: "Unauthorized",
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); //if token is tampered the error is sent
+
+    req.user = decoded; //req.user now contain all the data initially set in token
+
+    return next();
+  } catch (err) {
+    return res.status(401).json({
+      message: "Unauthorized",
+    });
+  }
+}
+
+module.exports = auth;
+```
+
+```js
+//index.routes.js
+const authMiddleware = require("../middlewares/auth");
+
+router.get("/home", authMiddleware, (req, res) => {
+  res.render("home");
+});
+
+router.post(
+  "/upload",
+  authMiddleware,
+  upload.single("file"),
+  async (req, res) => {
+    try {
+      const file = req.file;
+
+      if (!file) {
+        return res.status(400).send("No file uploaded");
+      }
+
+      const supabasePath = `uploads/${Date.now()}_${file.originalname}`;
+
+      const { data, error } = await supabase.storage
+        .from("project-drive")
+        .upload(supabasePath, file.buffer, {
+          contentType: file.mimetype,
+          upsert: true,
+        });
+
+      if (error) {
+        return res.status(500).json({ error: error.message });
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("project-drive")
+        .getPublicUrl(supabasePath);
+
+      const newFile = await fileModel.create({
+        filename: file.originalname,
+        supabasePath: data.path,
+        publicUrl: publicUrlData.publicUrl,
+        uploadedBy: req.user.userId, //middle ware sets req.user to decoded token values
+      });
+
+      res.json(newFile);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Server error");
+    }
+  }
+);
 ```
