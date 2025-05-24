@@ -165,3 +165,22 @@ router.post(
   }
 );
 ```
+
+4. <u>Encrypting password:</u>
+
+```
+npm i bcrypt
+```
+
+```js
+//user.routes.js
+const bcrypt = require("bcrypt");
+
+const hashPassword = await bcrypt.hash(password, 10); //.hash([value to be hashed],[number of times hashed])
+
+const newUser = await userModel.create({
+  email,
+  username,
+  password: hashPassword,
+});
+```
