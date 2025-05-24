@@ -284,5 +284,114 @@ app.use("/", indexRouter); //home will be rendered at just /home route.
 ```js
 //home.ejs
 //When creating form for files need to add enctype
-<form action="/upload-file" method="post" enctype="multipart/form-data"></form>
+<form action="/upload" method="post" enctype="multipart/form-data"></form>
+```
+
+8. <u>Creating a project at supabase</u>: https://supabase.com/
+   > Create a project <br>
+   > Build > storage > Create a storage bucket > public bucket <br>
+   > MIME type -> application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, image/jpeg, image/png, video/mp4, audio/mpeg, application/zip, text/plain <br>
+   > Settings > Data API > service_role
+
+```
+npm install @supabase/supabase-js
+npm i multer
+```
+
+```js
+//supabase.config.js
+require("dotenv").config(); //It wasn't called in app.js so this file need to call it seperately
+const { createClient } = require("@supabase/supabase-js");
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY; //use role_key when bucket is private, use anon/public key when dealing with public bucket
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error(
+    "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be defined in .env"
+  );
+}
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+module.exports = supabase;
+```
+
+```js
+// multerConfig.js
+const multer = require("multer");
+// Memory storage: files are kept in memory as Buffer
+const storage = multer.memoryStorage();
+// File filter (optional) — restrict to images, pdfs, etc.
+const fileFilter = (req, file, cb) => {
+  // Accept only certain mime types (example: images and PDFs)
+  const allowedTypes = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats - officedocument.wordprocessingml.document",
+    "image/jpeg",
+    "image/png",
+    "video/mp4",
+    "audio/mpeg",
+    "application/zip",
+    "text/plain",
+  ];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Unsupported file type"), false);
+  }
+};
+// File size limit (optional) — example: 30MB max
+const limits = {
+  fileSize: 3 * 1024 * 1024 * 1024, // 30 MB
+};
+// Export configured multer instance
+const upload = multer({
+  storage,
+  fileFilter,
+  limits,
+});
+module.exports = upload;
+```
+
+```js
+//index.routes.js
+const upload = require("../config/multer.config");
+const supabase = require("../config/supabase.config");
+//.single('name of input field')
+router.post("/upload", upload.single("file"), async (req, res) => {
+  try {
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).send("No file uploaded");
+    }
+
+    const supabasePath = `uploads/${Date.now()}_${file.originalname}`;
+
+    const { data, error } = await supabase.storage
+      .from("project-drive") //.from("your-project-name")
+      .upload(supabasePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true,
+      });
+
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("project-drive") //.from("your-project-name")
+      .getPublicUrl(supabasePath);
+
+    res.json({
+      path: data.path,
+      publicUrl: publicUrlData.publicUrl,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
+  }
+});
 ```
