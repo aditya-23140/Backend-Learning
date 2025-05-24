@@ -3,6 +3,7 @@ const { body, validationResult } = require("express-validator");
 const router = express.Router();
 const userModel = require("../models/user.model");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 //All routers now will be used as -> /user/[route name]
 
@@ -71,6 +72,19 @@ router.post(
         message: "username or password is incorrect",
       });
     }
+
+    const token = jwt.sign(
+      {
+        userId: user._id,
+        email: user.email,
+        username: user.username,
+      },
+      process.env.JWT_SECRET
+    ); //.sign({object: data}, secret key)
+
+    res.cookie("token", token); //.cookie(name, value)
+
+    res.send("Logged In");
   }
 );
 

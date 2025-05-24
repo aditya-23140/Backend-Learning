@@ -227,3 +227,35 @@ router.post(
 );
 ```
 
+6. <u>JsonWebToken for verification</u>: The token should be saved in cookies
+
+```
+npm i jsonwebtoken
+npm i cookie-parser
+```
+
+```js
+//app.js
+const cookieParser = require("cookie-parser");
+
+app.use(cookieParser());
+```
+
+```js
+//user.routes.js
+
+const jwt = require("jsonwebtoken");
+
+const token = jwt.sign(
+  {
+    userId: user._id,
+    email: user.email,
+    username: user.username,
+  },
+  process.env.JWT_SECRET
+); //.sign({object: data}, secret key)
+
+res.cookie("token", token); //.cookie(name, value)
+
+res.send("Logged In");
+```
