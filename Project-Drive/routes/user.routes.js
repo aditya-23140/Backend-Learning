@@ -38,5 +38,40 @@ router.post(
   }
 );
 
+router.get("/login", (req, res) => {
+  res.render("login");
+});
+
+router.post(
+  "/login",
+  body("username").trim().isLength({ min: 3 }),
+  body("password").trim().isLength({ min: 5 }),
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: errors.array(),
+        message: "Invalid Data",
+      });
+    }
+
+    const { username, password } = req.body;
+
+    const user = await userModel.findOne({ username: username });
+    if (!user) {
+      return res.status(400).json({
+        message: "username or password is incorrect",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password); //.compare([enter password], [password in db])
+
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "username or password is incorrect",
+      });
+    }
+  }
+);
 
 module.exports = router;
