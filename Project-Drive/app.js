@@ -1,6 +1,11 @@
 const PORT = 3000;
 const express = require("express");
 const userRouter = require("./routes/user.routes");
+const dotenv = require("dotenv");
+dotenv.config(); //Gets access of env in entire project
+const connectToDb = require("./config/db");
+connectToDb();
+
 const app = express();
 
 app.set("view engine", "ejs");

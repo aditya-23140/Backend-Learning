@@ -60,4 +60,108 @@ router.post(
 );
 ```
 
-4. <u>Connecting Database</u>:
+## Connecting Database
+
+1. <u>Adding env file</u>: For security all database credentials or sensetive information like API keys are written in env file.
+
+```
+npm i dotenv
+```
+
+```
+//env file content
+MONGO_URI=mongodb://0.0.0.0/project-drive
+```
+
+```js
+//app.js
+const dotenv = require("dotenv");
+
+dotenv.config(); //Gets access of env in entire project
+```
+
+2. <u>Adding db.js connection file</u>: In config directory.
+
+```js
+const mongoose = require("mongoose");
+
+function connectToDb() {
+  mongoose.connect(process.env.MONGO_URI).then(() => {
+    console.log("Connected to db");
+  });
+}
+
+module.exports = connectToDb;
+```
+
+```js
+//app.js
+const connectToDb = require("./config/db");
+connectToDb();
+```
+
+3. <u>Creating user model</u>:
+
+```js
+//user.model.js in models directory
+const mongoose = require("mongoose");
+
+const userSchema = new mongoose.Schema({
+  // username: String, correct for basic
+  // email: String,
+  // password: String,
+  //In production
+  username: {
+    type: String,
+    required: true,
+    trim: true,
+    lowercase: true,
+    unique: true,
+    minLength: [3, "Username must be at least 3 characters long"], //[length, message]
+  },
+  email: {
+    type: String,
+    required: true,
+    trim: true,
+    lowercase: true,
+    unique: true,
+    minLength: [13, "Email must be at least 13 characters long"], //[length, message]
+  },
+  password: {
+    type: String,
+    required: true,
+    trim: true,
+    minLength: [5, "Password must be at least 5 characters long"], //[length, message]
+  },
+});
+```
+
+```js
+//user.routes.js
+const userModel = require("../models/user.model");
+router.post(
+  "/register",
+  body("email").trim().isEmail().isLength({ min: 13 }),
+  body("password").trim().isLength({ min: 5 }),
+  body("username").trim().isLength({ min: 3 }),
+  async (req, res) => {
+    const errors = validationResult(req);
+    console.log(errors);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        errors: errors.array(),
+        message: "Invalid Data",
+      });
+    }
+    const { email, username, password } = req.body;
+
+    const newUser = await userModel.create({
+      email,
+      username,
+      password,
+    });
+
+    res.json(newUser);
+  }
+);
+```
