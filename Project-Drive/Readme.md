@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ---
+=======
+- - -
+>>>>>>> df1efd20af9e1acbbed382751875cbe38135b384
 
 ## Advanced Concepts in a Node.js Application
 
@@ -93,7 +97,11 @@ router.post(
 );
 ```
 
+<<<<<<< HEAD
 ---
+=======
+- - -
+>>>>>>> df1efd20af9e1acbbed382751875cbe38135b384
 
 ## Connecting to the Database
 
@@ -139,8 +147,12 @@ JavaScript
 const mongoose = require("mongoose");
 
 function connectToDb() {
+<<<<<<< HEAD
   mongoose
     .connect(process.env.MONGO_URI)
+=======
+  mongoose.connect(process.env.MONGO_URI)
+>>>>>>> df1efd20af9e1acbbed382751875cbe38135b384
     .then(() => {
       console.log("Connected to db");
     })
@@ -227,6 +239,7 @@ router.post(
     const { email, username, password } = req.body;
 
     // Check if user already exists
+<<<<<<< HEAD
     const existingUser = await userModel.findOne({
       $or: [{ email }, { username }],
     });
@@ -234,6 +247,11 @@ router.post(
       return res
         .status(409)
         .json({ message: "User with this email or username already exists" });
+=======
+    const existingUser = await userModel.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) {
+      return res.status(409).json({ message: "User with this email or username already exists" });
+>>>>>>> df1efd20af9e1acbbed382751875cbe38135b384
     }
 
     const newUser = await userModel.create({
@@ -289,7 +307,11 @@ router.post(
 );
 ```
 
+<<<<<<< HEAD
 ---
+=======
+- - -
+>>>>>>> df1efd20af9e1acbbed382751875cbe38135b384
 
 ## Authentication and Session Management
 
@@ -363,6 +385,7 @@ router.post(
         username: user.username,
       },
       process.env.JWT_SECRET,
+<<<<<<< HEAD
       { expiresIn: "1h" } // Token expires in 1 hour
     ); //.sign({object: data}, secret key, [options])
 
@@ -370,6 +393,12 @@ router.post(
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
     }); //.cookie(name, value, options)
+=======
+      { expiresIn: '1h' } // Token expires in 1 hour
+    ); //.sign({object: data}, secret key, [options])
+
+    res.cookie("token", token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' }); //.cookie(name, value, options)
+>>>>>>> df1efd20af9e1acbbed382751875cbe38135b384
 
     res.status(200).json({ message: "Logged In successfully", token }); // Send token in JSON for API, or redirect for full web app
   }
@@ -415,7 +444,11 @@ HTML
 </form>
 ```
 
+<<<<<<< HEAD
 ---
+=======
+- - -
+>>>>>>> df1efd20af9e1acbbed382751875cbe38135b384
 
 ## File Storage with Supabase
 
@@ -514,8 +547,12 @@ const upload = require("../config/multer.config");
 const supabase = require("../config/supabase.config");
 // ... (other imports)
 
+<<<<<<< HEAD
 router.post("/upload", upload.single("file"), async (req, res) => {
   //.single('name of input field')
+=======
+router.post("/upload", upload.single("file"), async (req, res) => { //.single('name of input field')
+>>>>>>> df1efd20af9e1acbbed382751875cbe38135b384
   try {
     const file = req.file;
 
@@ -573,8 +610,12 @@ const fileSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+<<<<<<< HEAD
   publicUrl: {
     // This might be a signed URL if bucket is private
+=======
+  publicUrl: { // This might be a signed URL if bucket is private
+>>>>>>> df1efd20af9e1acbbed382751875cbe38135b384
     type: String,
     required: true,
   },
@@ -594,7 +635,11 @@ const File = mongoose.model("File", fileSchema); // Capitalize model name
 module.exports = File;
 ```
 
+<<<<<<< HEAD
 ---
+=======
+- - -
+>>>>>>> df1efd20af9e1acbbed382751875cbe38135b384
 
 ## Integrating Authentication and File Management
 
@@ -754,8 +799,7 @@ HTML
       href="/download/<%= encodeURIComponent(file.supabasePath) %>"
       download="<%= file.filename %>"
       target="_blank"
-      ><i class="ri-download-line"></i
-    ></a>
+    ><i class="ri-download-line"></i></a>
   </div>
   <%}); %>
 </div>
@@ -779,8 +823,12 @@ router.get("/download/:path", authMiddleware, async (req, res) => {
 
     if (!file) {
       return res.status(401).json({
+<<<<<<< HEAD
         message:
           "Unauthorized: File does not belong to this user or not found.",
+=======
+        message: "Unauthorized: File does not belong to this user or not found.",
+>>>>>>> df1efd20af9e1acbbed382751875cbe38135b384
       });
     }
 
