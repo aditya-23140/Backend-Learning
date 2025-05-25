@@ -75,7 +75,7 @@ router.post(
         uploadedBy: req.user.userId,
       });
 
-      res.json(newFile);
+      res.redirect(`/home`);
     } catch (err) {
       console.error(err);
       res.status(500).send("Server error");
