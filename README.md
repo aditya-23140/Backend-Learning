@@ -28,7 +28,8 @@ cd BASICS
 npm i
 cd ..
 cd Project-Drive
-npm i cd ..
+npm i
+cd ..
 ```
 
 ## Contact
