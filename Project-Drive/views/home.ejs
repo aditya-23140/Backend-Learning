@@ -47,13 +47,13 @@
       </button>
     </div>
 
-    <div class="files flex flex-wrap gap-4 mt-8">
+    <div class="files flex flex-wrap gap-4 mt-8 items-center justify-center">
       <% files.forEach((file)=> {
         const isImage = file.filename.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i);
         const isPDF = file.filename.match(/\.pdf$/i);
         %>
         <div
-          class="w-fit sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.66rem)] xl:w-[calc(25%-0.75rem)] bg-[#778da9] dark:bg-[#0d1b2a] shadow-sm hover:shadow-md transition-shadow rounded-xl p-4 flex flex-col justify-between">
+          class="sm:w-1/2 md:w-2/3 lg:w-2/5 xl:w-1/3 bg-[#778da9] dark:bg-[#0d1b2a] shadow-sm hover:shadow-md transition-shadow rounded-xl p-4 flex flex-col justify-between">
 
           <!-- File Preview -->
           <a href="<%= file.signedUrl %>" target="_blank" class="mb-4 block">

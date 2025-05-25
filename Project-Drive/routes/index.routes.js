@@ -29,8 +29,6 @@ router.get("/home", authMiddleware, async (req, res) => {
       })
     );
 
-    console.log(signedFiles);
-
     res.render("home", { files: signedFiles });
   } catch (err) {
     console.error("Failed to fetch files:", err);
