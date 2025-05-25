@@ -1,41 +1,74 @@
-# Advanced Concept
+---
 
-1. <u>Adding Script in package.json</u>:
+## Advanced Concepts in a Node.js Application
 
-   ```js
-   //in package.json
-   "start": "npx nodemon app.js"
-   ```
+Here's a breakdown of advanced concepts for building a robust Node.js application, including route management, data validation, database integration, authentication, and file storage with Supabase.
 
-   now we can run the program using:
+### 1\. Adding Scripts in `package.json`
 
-   > npm start
+You can define custom scripts in your `package.json` file for easier execution of commands.
 
-2. Making all routes in one file increases clutter so make a different route for different operation in a `routes` folder/directory.
+JSON
+
+```json
+"scripts": {
+  "start": "npx nodemon app.js"
+}
+```
+
+Now, you can run your application using:
+
+Bash
+
+```bash
+npm start
+```
+
+### 2\. Organizing Routes
+
+To prevent clutter in your main application file, it's best practice to separate routes into different files based on their functionality.
+
+**`routes/user.routes.js`**
+
+JavaScript
 
 ```js
-//user.routes.js file
 const express = require("express");
 const router = express.Router();
 
-//All routers now will be used as -> /user/[route name]
-
+// All routes here will be prefixed with /user/
 router.get("/test", (req, res) => {
   res.send("user test route");
 });
 
 module.exports = router;
+```
 
-//app.js
+**`app.js`**
+
+JavaScript
+
+```js
 const userRouter = require("./routes/user.routes");
-app.use("/user", userRouter); //add all routes after the body parser middleware
+// ... other middleware, e.g., body parser
+app.use("/user", userRouter); // Add all routes after body parser middleware
 ```
 
-3. <u>Adding register Page:</u> Using normal way we get data but they are sometimes not valid so use `express validator` package.
+### 3\. Adding a Registration Page with Validation
 
-```
+For robust data handling, use the `express-validator` package to validate incoming user data.
+
+First, install the package:
+
+Bash
+
+```bash
 npm i express-validator
 ```
+
+Then, implement the validation in your route:
+
+JavaScript
 
 ```js
 const { body, validationResult } = require("express-validator");
@@ -44,11 +77,11 @@ router.post(
   "/register",
   body("email").trim().isEmail().isLength({ min: 13 }),
   body("password").trim().isLength({ min: 5 }),
-  body("username").trim().isLength({ min: 3 }), //These are middle ware to check if the data recieved are valid
+  body("username").trim().isLength({ min: 3 }), // These are middleware to check if the data received are valid
   (req, res) => {
     const errors = validationResult(req);
     console.log(errors);
-    //Sending error message
+    // Sending error message
     if (!errors.isEmpty()) {
       return res.status(400).json({
         errors: errors.array(),
@@ -60,64 +93,93 @@ router.post(
 );
 ```
 
-## Connecting Database
+---
 
-1. <u>Adding env file</u>: For security all database credentials or sensetive information like API keys are written in env file.
+## Connecting to the Database
 
-```
+### 1\. Adding Environment Variables
+
+For security, sensitive information like database credentials and API keys should be stored in an `.env` file and accessed through environment variables.
+
+Install `dotenv`:
+
+Bash
+
+```bash
 npm i dotenv
 ```
 
+**`.env` file content**
+
 ```
-//env file content
 MONGO_URI=mongodb://0.0.0.0/project-drive
+JWT_SECRET=your_secret_key_here
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
+
+**`app.js`**
+
+JavaScript
 
 ```js
-//app.js
 const dotenv = require("dotenv");
-
-dotenv.config(); //Gets access of env in entire project
+dotenv.config(); // Gives access to .env variables throughout the project
 ```
 
-2. <u>Adding db.js connection file</u>: In config directory.
+### 2\. Creating a Database Connection File
+
+Create a dedicated file for your database connection in a `config` directory.
+
+**`config/db.js`**
+
+JavaScript
 
 ```js
 const mongoose = require("mongoose");
 
 function connectToDb() {
-  mongoose.connect(process.env.MONGO_URI).then(() => {
-    console.log("Connected to db");
-  });
+  mongoose
+    .connect(process.env.MONGO_URI)
+    .then(() => {
+      console.log("Connected to db");
+    })
+    .catch((err) => {
+      console.error("Database connection error:", err);
+    });
 }
 
 module.exports = connectToDb;
 ```
 
+**`app.js`**
+
+JavaScript
+
 ```js
-//app.js
 const connectToDb = require("./config/db");
 connectToDb();
 ```
 
-3. <u>Creating user model</u>:
+### 3\. Creating a User Model
+
+Define your user schema using Mongoose.
+
+**`models/user.model.js`**
+
+JavaScript
 
 ```js
-//user.model.js in models directory
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-  // username: String, correct for basic
-  // email: String,
-  // password: String,
-  //In production
   username: {
     type: String,
     required: true,
     trim: true,
     lowercase: true,
     unique: true,
-    minLength: [3, "Username must be at least 3 characters long"], //[length, message]
+    minLength: [3, "Username must be at least 3 characters long"],
   },
   email: {
     type: String,
@@ -125,20 +187,29 @@ const userSchema = new mongoose.Schema({
     trim: true,
     lowercase: true,
     unique: true,
-    minLength: [13, "Email must be at least 13 characters long"], //[length, message]
+    minLength: [13, "Email must be at least 13 characters long"],
   },
   password: {
     type: String,
     required: true,
     trim: true,
-    minLength: [5, "Password must be at least 5 characters long"], //[length, message]
+    minLength: [5, "Password must be at least 5 characters long"],
   },
 });
+
+const User = mongoose.model("User", userSchema); // Capitalize model name
+
+module.exports = User; // Export the model directly
 ```
 
+**`routes/user.routes.js`**
+
+JavaScript
+
 ```js
-//user.routes.js
-const userModel = require("../models/user.model");
+const userModel = require("../models/user.model"); // Ensure correct path to model
+// ... (express-validator imports and other middleware)
+
 router.post(
   "/register",
   body("email").trim().isEmail().isLength({ min: 13 }),
@@ -155,43 +226,104 @@ router.post(
     }
     const { email, username, password } = req.body;
 
+    // Check if user already exists
+    const existingUser = await userModel.findOne({
+      $or: [{ email }, { username }],
+    });
+    if (existingUser) {
+      return res
+        .status(409)
+        .json({ message: "User with this email or username already exists" });
+    }
+
     const newUser = await userModel.create({
       email,
       username,
       password,
     });
 
-    res.json(newUser);
+    res.status(201).json(newUser); // Use 201 for successful creation
   }
 );
 ```
 
-4. <u>Encrypting password:</u>
+### 4\. Encrypting Passwords
 
-```
+It's crucial to encrypt user passwords before storing them in the database using `bcrypt`.
+
+Install `bcrypt`:
+
+Bash
+
+```bash
 npm i bcrypt
 ```
 
+**`routes/user.routes.js`**
+
+JavaScript
+
 ```js
-//user.routes.js
 const bcrypt = require("bcrypt");
+// ... (other imports)
 
-const hashPassword = await bcrypt.hash(password, 10); //.hash([value to be hashed],[number of times hashed])
+router.post(
+  "/register",
+  // ... (validation middleware)
+  async (req, res) => {
+    // ... (error handling for validation)
+    const { email, username, password } = req.body;
 
-const newUser = await userModel.create({
-  email,
-  username,
-  password: hashPassword,
-});
+    // ... (check for existing user)
+
+    const hashPassword = await bcrypt.hash(password, 10); // .hash([value to be hashed],[number of times hashed])
+
+    const newUser = await userModel.create({
+      email,
+      username,
+      password: hashPassword,
+    });
+
+    res.status(201).json(newUser);
+  }
+);
 ```
 
-5. <u>Login Page</u>: Adding login.ejs
+---
+
+## Authentication and Session Management
+
+### 5\. Login Page and Authentication
+
+Implement a login route that verifies user credentials and issues a JSON Web Token (JWT).
+
+Install `jsonwebtoken` and `cookie-parser`:
+
+Bash
+
+```bash
+npm i jsonwebtoken cookie-parser
+```
+
+**`app.js`**
+
+JavaScript
 
 ```js
-//user.routes.js
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
+```
+
+**`routes/user.routes.js`**
+
+JavaScript
+
+```js
+const jwt = require("jsonwebtoken");
+// ... (other imports, including bcrypt and userModel)
 
 router.get("/login", (req, res) => {
-  res.render("login");
+  res.render("login"); // Assuming you have a login.ejs view
 });
 
 router.post(
@@ -202,7 +334,7 @@ router.post(
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
-        error: errors.array(),
+        errors: errors.array(),
         message: "Invalid Data",
       });
     }
@@ -212,99 +344,110 @@ router.post(
     const user = await userModel.findOne({ username: username });
     if (!user) {
       return res.status(400).json({
-        message: "username or password is incorrect",
+        message: "Incorrect username or password",
       });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password); //.compare([enter password], [password in db])
+    const isMatch = await bcrypt.compare(password, user.password); // .compare([entered password], [password in db])
 
     if (!isMatch) {
       return res.status(400).json({
-        message: "username or password is incorrect",
+        message: "Incorrect username or password",
       });
     }
+
+    const token = jwt.sign(
+      {
+        userId: user._id,
+        email: user.email,
+        username: user.username,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" } // Token expires in 1 hour
+    ); //.sign({object: data}, secret key, [options])
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    }); //.cookie(name, value, options)
+
+    res.status(200).json({ message: "Logged In successfully", token }); // Send token in JSON for API, or redirect for full web app
   }
 );
 ```
 
-6. <u>JsonWebToken for verification</u>: The token should be saved in cookies
+### 6\. Creating a Home Page
 
-```
-npm i jsonwebtoken
-npm i cookie-parser
-```
+Define a route for your application's home page.
 
-```js
-//app.js
-const cookieParser = require("cookie-parser");
+**`routes/index.routes.js`**
 
-app.use(cookieParser());
-```
+JavaScript
 
 ```js
-//user.routes.js
-
-const jwt = require("jsonwebtoken");
-
-const token = jwt.sign(
-  {
-    userId: user._id,
-    email: user.email,
-    username: user.username,
-  },
-  process.env.JWT_SECRET
-); //.sign({object: data}, secret key)
-
-res.cookie("token", token); //.cookie(name, value)
-
-res.send("Logged In");
-```
-
-7. <u>Creating home page</u>:
-
-```js
-//index.routes.js
 const express = require("express");
 const router = express.Router();
 
 router.get("/home", (req, res) => {
-  res.render("home");
+  res.render("home"); // Assuming you have a home.ejs view
 });
 
 module.exports = router;
 ```
 
+**`app.js`**
+
+JavaScript
+
 ```js
-//app.js
 const indexRouter = require("./routes/index.routes");
-
-app.use("/", indexRouter); //home will be rendered at just /home route.
+app.use("/", indexRouter); // The /home route will now be accessible at /home.
 ```
+
+**`home.ejs` (for file uploads)**
+
+HTML
+
+```html
+<form action="/upload" method="post" enctype="multipart/form-data">
+  <input type="file" name="file" />
+  <button type="submit">Upload</button>
+</form>
+```
+
+---
+
+## File Storage with Supabase
+
+### 7\. Setting up Supabase
+
+Create a project on Supabase and configure a storage bucket.
+
+1.  Go to [Supabase](https://supabase.com/).
+2.  **Create a project.**
+3.  Navigate to **Build > Storage > Create a storage bucket**.
+4.  Make it a **public bucket** or configure access rules.
+5.  Set **MIME types** for allowed files (e.g., `application/pdf`, `image/jpeg`, `image/png`, etc.).
+6.  Go to **Settings > Data API** and get your `service_role` key (use `service_role` for private buckets, `anon/public` key for public buckets).
+
+Install Supabase SDK and Multer:
+
+Bash
+
+```bash
+npm install @supabase/supabase-js multer
+```
+
+**`config/supabase.config.js`**
+
+JavaScript
 
 ```js
-//home.ejs
-//When creating form for files need to add enctype
-<form action="/upload" method="post" enctype="multipart/form-data"></form>
-```
-
-8. <u>Creating a project at supabase</u>: https://supabase.com/
-   > Create a project <br>
-   > Build > storage > Create a storage bucket > public bucket <br>
-   > MIME type -> application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, image/jpeg, image/png, video/mp4, audio/mpeg, application/zip, text/plain <br>
-   > Settings > Data API > service_role
-
-```
-npm install @supabase/supabase-js
-npm i multer
-```
-
-```js
-//supabase.config.js
-require("dotenv").config(); //It wasn't called in app.js so this file need to call it seperately
+require("dotenv").config(); // Ensure dotenv is configured here if not in app.js
 const { createClient } = require("@supabase/supabase-js");
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY; //use role_key when bucket is private, use anon/public key when dealing with public bucket
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   throw new Error(
@@ -317,18 +460,22 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 module.exports = supabase;
 ```
 
+**`config/multer.config.js`**
+
+JavaScript
+
 ```js
-// multerConfig.js
 const multer = require("multer");
+
 // Memory storage: files are kept in memory as Buffer
 const storage = multer.memoryStorage();
-// File filter (optional) — restrict to images, pdfs, etc.
+
+// File filter (optional) — restrict to specific types
 const fileFilter = (req, file, cb) => {
-  // Accept only certain mime types (example: images and PDFs)
   const allowedTypes = [
     "application/pdf",
     "application/msword",
-    "application/vnd.openxmlformats - officedocument.wordprocessingml.document",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "image/jpeg",
     "image/png",
     "video/mp4",
@@ -342,25 +489,33 @@ const fileFilter = (req, file, cb) => {
     cb(new Error("Unsupported file type"), false);
   }
 };
-// File size limit (optional) — example: 30MB max
+
+// File size limit (optional) — example: 3GB max (note: 30MB in original, adjust as needed)
 const limits = {
-  fileSize: 3 * 1024 * 1024 * 1024, // 30 MB
+  fileSize: 3 * 1024 * 1024 * 1024, // 3 GB (adjust to your needs, original was 30MB)
 };
+
 // Export configured multer instance
 const upload = multer({
   storage,
   fileFilter,
   limits,
 });
+
 module.exports = upload;
 ```
 
+**`routes/index.routes.js`**
+
+JavaScript
+
 ```js
-//index.routes.js
 const upload = require("../config/multer.config");
 const supabase = require("../config/supabase.config");
-//.single('name of input field')
+// ... (other imports)
+
 router.post("/upload", upload.single("file"), async (req, res) => {
+  //.single('name of input field')
   try {
     const file = req.file;
 
@@ -371,7 +526,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     const supabasePath = `uploads/${Date.now()}_${file.originalname}`;
 
     const { data, error } = await supabase.storage
-      .from("project-drive") //.from("your-project-name")
+      .from("project-drive") // .from("your-bucket-name")
       .upload(supabasePath, file.buffer, {
         contentType: file.mimetype,
         upsert: true,
@@ -382,7 +537,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     }
 
     const { data: publicUrlData } = supabase.storage
-      .from("project-drive") //.from("your-project-name")
+      .from("project-drive") // .from("your-bucket-name")
       .getPublicUrl(supabasePath);
 
     res.json({
@@ -397,7 +552,13 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 });
 ```
 
-9. <u>File schema</u>:
+### 8\. File Schema for Database Storage
+
+Define a Mongoose schema to store information about uploaded files.
+
+**`models/file.model.js`**
+
+JavaScript
 
 ```js
 const mongoose = require("mongoose");
@@ -405,7 +566,7 @@ const mongoose = require("mongoose");
 const fileSchema = new mongoose.Schema({
   filename: {
     type: String,
-    required: [true, "Path is required"],
+    required: [true, "Filename is required"],
   },
   supabasePath: {
     type: String,
@@ -413,12 +574,13 @@ const fileSchema = new mongoose.Schema({
     unique: true,
   },
   publicUrl: {
+    // This might be a signed URL if bucket is private
     type: String,
     required: true,
   },
   uploadedBy: {
-    type: mongoose.Schema.Types.ObjectId, // optional, if you have users collection
-    ref: "users", //database for user collection
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User", // Reference to the User model
     required: [true, "User is required"],
   },
   uploadedAt: {
@@ -427,36 +589,41 @@ const fileSchema = new mongoose.Schema({
   },
 });
 
-const file = mongoose.model("file", fileSchema);
+const File = mongoose.model("File", fileSchema); // Capitalize model name
 
-module.exports = file;
+module.exports = File;
 ```
 
-10. <u>Adding AUTH and uploading file details to mongodb</u>:
+---
 
-> Create middlewares directory and create auth.js file
+## Integrating Authentication and File Management
+
+### 9\. Adding Authentication Middleware and Uploading File Details
+
+Create an authentication middleware to protect routes and save file details to MongoDB.
+
+**`middlewares/auth.js`**
+
+JavaScript
 
 ```js
-//auth.js
 const jwt = require("jsonwebtoken");
 
 function auth(req, res, next) {
   const token = req.cookies.token;
   if (!token) {
     return res.status(401).json({
-      message: "Unauthorized",
+      message: "Unauthorized: No token provided.",
     });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); //if token is tampered the error is sent
-
-    req.user = decoded; //req.user now contain all the data initially set in token
-
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); // If token is tampered, an error is thrown
+    req.user = decoded; // req.user now contains all the data initially set in the token
     return next();
   } catch (err) {
     return res.status(401).json({
-      message: "Unauthorized",
+      message: "Unauthorized: Invalid token.",
     });
   }
 }
@@ -464,12 +631,24 @@ function auth(req, res, next) {
 module.exports = auth;
 ```
 
-```js
-//index.routes.js
-const authMiddleware = require("../middlewares/auth");
+**`routes/index.routes.js`**
 
-router.get("/home", authMiddleware, (req, res) => {
-  res.render("home");
+JavaScript
+
+```js
+const authMiddleware = require("../middlewares/auth");
+const fileModel = require("../models/file.model"); // Ensure correct path to model
+// ... (other imports like upload and supabase)
+
+router.get("/home", authMiddleware, async (req, res) => {
+  // Fetch user's uploaded files (initial render, before signed URLs)
+  try {
+    const userFiles = await fileModel.find({ uploadedBy: req.user.userId });
+    res.render("home", { files: userFiles }); // Pass files to the EJS template
+  } catch (err) {
+    console.error("Failed to fetch files for home page:", err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 router.post(
@@ -505,10 +684,10 @@ router.post(
         filename: file.originalname,
         supabasePath: data.path,
         publicUrl: publicUrlData.publicUrl,
-        uploadedBy: req.user.userId, //middle ware sets req.user to decoded token values
+        uploadedBy: req.user.userId, // Middleware sets req.user to decoded token values
       });
 
-      res.json(newFile);
+      res.redirect(`/home`); // Redirect to home page after successful upload
     } catch (err) {
       console.error(err);
       res.status(500).send("Server error");
@@ -517,32 +696,35 @@ router.post(
 );
 ```
 
-11. <u>Fetchin user uploaded files:</u> For private buckets we need to create signedURLs to access files
+### 10\. Fetching User Uploaded Files and Signed URLs
+
+For private Supabase buckets, you need to generate signed URLs to allow temporary access to files.
+
+JavaScript
 
 ```js
-const DURATION = 24 * 60 * 60;
+const DURATION = 24 * 60 * 60; // 24 hours in seconds
 
 router.get("/home", authMiddleware, async (req, res) => {
   try {
     const userFiles = await fileModel.find({ uploadedBy: req.user.userId });
 
-    //Generating signed urls
+    // Generating signed URLs for each file
     const signedFiles = await Promise.all(
       userFiles.map(async (file) => {
         const { data, error } = await supabase.storage
-          .from("project-drive") //replace with your bucket name
-          .createSignedUrl(file.supabasePath, DURATION); //valid for 24hrs
+          .from("project-drive") // Replace with your bucket name
+          .createSignedUrl(file.supabasePath, DURATION); // Valid for 24 hours
 
         if (error) {
-          console.error(`Error signing URL for ${file.supabasePath}`, error);
+          console.error(`Error signing URL for ${file.supabasePath}:`, error);
+          // Return file object with null signedUrl if there's an error
           return { ...file.toObject(), signedUrl: null };
         }
 
         return { ...file.toObject(), signedUrl: data.signedUrl };
       })
     );
-
-    console.log(signedFiles);
 
     res.render("home", { files: signedFiles });
   } catch (err) {
@@ -552,10 +734,15 @@ router.get("/home", authMiddleware, async (req, res) => {
 });
 ```
 
-12. <u>Adding download feature in homepage</u>:
+### 11\. Adding a Download Feature
+
+Allow users to download their uploaded files.
+
+**`home.ejs`**
+
+HTML
 
 ```html
-<!-- Home.ejs -->
 <div class="files flex flex-col gap-2 mt-8">
   <% files.forEach((file)=> { %>
   <div
@@ -574,13 +761,17 @@ router.get("/home", authMiddleware, async (req, res) => {
 </div>
 ```
 
+**`routes/index.routes.js`**
+
+JavaScript
+
 ```js
-//index.router.js
 router.get("/download/:path", authMiddleware, async (req, res) => {
   try {
     const loggedUserId = req.user.userId;
     const path = decodeURIComponent(req.params.path);
 
+    // Verify that the file belongs to the logged-in user
     const file = await fileModel.findOne({
       uploadedBy: loggedUserId,
       supabasePath: path,
@@ -588,25 +779,27 @@ router.get("/download/:path", authMiddleware, async (req, res) => {
 
     if (!file) {
       return res.status(401).json({
-        message: "Unauthorized",
+        message:
+          "Unauthorized: File does not belong to this user or not found.",
       });
     }
 
     const { data, error } = await supabase.storage
-      .from("project-drive") //replace with your bucket name
-      .createSignedUrl(path, 60); //valid for 60 seconds
+      .from("project-drive") // Replace with your bucket name
+      .createSignedUrl(path, 60); // Valid for 60 seconds (short duration for direct download)
 
     if (error || !data) {
-      console.error(error);
+      console.error("Error generating signed URL for download:", error);
       return res.status(500).json({ message: "Failed to generate signed URL" });
     }
 
     const signedUrl = data.signedUrl;
 
+    // Redirect the user to the signed URL to initiate download
     res.redirect(signedUrl);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Download error:", err);
+    res.status(500).json({ message: "Internal server error during download" });
   }
 });
 ```
